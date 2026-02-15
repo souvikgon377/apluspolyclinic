@@ -1,0 +1,24 @@
+import express from 'express';
+import { loginAdmin, appointmentsAdmin, appointmentCancel, appointmentComplete, addDoctor, allDoctors, adminDashboard, deleteDoctor, uploadPrescription, getAllPatients, deleteAllPatients } from '../controllers/adminController.js';
+import { changeAvailablity } from '../controllers/doctorController.js';
+import { uploadGalleryImage, deleteGalleryImage } from '../controllers/galleryController.js';
+import authAdmin from '../middleware/authAdmin.js';
+import upload from '../middleware/multer.js';
+const adminRouter = express.Router();
+
+adminRouter.post("/login", loginAdmin)
+adminRouter.post("/add-doctor", authAdmin, upload.single('image'), addDoctor)
+adminRouter.get("/appointments", authAdmin, appointmentsAdmin)
+adminRouter.post("/cancel-appointment", authAdmin, appointmentCancel)
+adminRouter.post("/complete-appointment", authAdmin, appointmentComplete)
+adminRouter.get("/all-doctors", authAdmin, allDoctors)
+adminRouter.post("/change-availability", authAdmin, changeAvailablity)
+adminRouter.post("/delete-doctor", authAdmin, deleteDoctor)
+adminRouter.get("/dashboard", authAdmin, adminDashboard)
+adminRouter.post("/upload-prescription", authAdmin, upload.single('prescription'), uploadPrescription)
+adminRouter.get("/all-patients", authAdmin, getAllPatients)
+adminRouter.post("/delete-all-patients", authAdmin, deleteAllPatients)
+adminRouter.post("/upload-gallery", authAdmin, upload.array('images', 10), uploadGalleryImage)
+adminRouter.post("/delete-gallery", authAdmin, deleteGalleryImage)
+
+export default adminRouter;
