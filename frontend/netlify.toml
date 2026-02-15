@@ -6,6 +6,11 @@
   
   # Build command
   command = "npm run build"
+  
+  # Environment configuration - VITE_ vars are public and baked into client bundle
+  # Omit build output from secrets scanning since these are intentionally public
+  [build.environment]
+    SECRETS_SCAN_OMIT_PATHS = "dist/**,**/dist/**,.vite/**"
 
 # Redirect rules (fallback to _redirects file)
 [[redirects]]
