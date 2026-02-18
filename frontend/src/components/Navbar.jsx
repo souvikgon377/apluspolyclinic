@@ -57,7 +57,7 @@ const Navbar = () => {
                 </div>
               </div>
             </div>
-            : <button onClick={() => navigate('/login')} className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-8 py-3 rounded-full font-medium hidden md:block hover:shadow-lg hover:scale-105 transition-all duration-300'>Create account</button>
+            : <button onClick={() => navigate('/login')} className='bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-4 py-2 md:px-8 md:py-3 rounded-full font-medium hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm md:text-base'>Login</button>
         }
         <img onClick={() => setShowMenu(true)} className='w-6 md:hidden' src={assets.menu_icon} alt="" />
 
@@ -73,6 +73,16 @@ const Navbar = () => {
             <NavLink onClick={() => setShowMenu(false)} to='/about' ><p className='px-4 py-2 rounded full inline-block'>ABOUT</p></NavLink>
             <NavLink onClick={() => setShowMenu(false)} to='/gallery' ><p className='px-4 py-2 rounded full inline-block'>GALLERY</p></NavLink>
             <NavLink onClick={() => setShowMenu(false)} to='/contact' ><p className='px-4 py-2 rounded full inline-block'>CONTACT</p></NavLink>
+            {token && userData ? (
+              <>
+                <NavLink onClick={() => setShowMenu(false)} to='/my-profile'><p className='px-4 py-2 rounded full inline-block'>MY PROFILE</p></NavLink>
+                <NavLink onClick={() => setShowMenu(false)} to='/my-appointments'><p className='px-4 py-2 rounded full inline-block'>MY APPOINTMENTS</p></NavLink>
+                <NavLink onClick={() => setShowMenu(false)} to='/my-prescriptions'><p className='px-4 py-2 rounded full inline-block'>MY PRESCRIPTIONS</p></NavLink>
+                <button onClick={() => { logout(); setShowMenu(false); }} className='px-4 py-2 text-red-600 font-medium'>LOGOUT</button>
+              </>
+            ) : (
+              <button onClick={() => { navigate('/login'); setShowMenu(false); }} className='mt-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-8 py-3 rounded-full font-medium hover:shadow-lg transition-all'>LOGIN</button>
+            )}
           </ul>
         </div>
       </div>
