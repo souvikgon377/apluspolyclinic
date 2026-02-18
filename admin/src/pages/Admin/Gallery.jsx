@@ -12,6 +12,7 @@ const Gallery = () => {
     const [description, setDescription] = useState('')
     const [galleryItems, setGalleryItems] = useState([])
     const [loading, setLoading] = useState(false)
+    const [deletingId, setDeletingId] = useState(null)
 
     const { backendUrl } = useContext(AppContext)
     const { aToken } = useContext(AdminContext)
