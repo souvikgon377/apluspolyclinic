@@ -22,7 +22,7 @@ app.use(cors({
   origin: [
     'http://localhost:5173',  // Frontend dev
     'http://localhost:5174',  // Admin dev
-    'https://aplususer.netlify.app',  // Frontend production
+    'https://apluspolyclinicasansol.netlify.app',  // Frontend production
     'https://aplusadmin.netlify.app'  // Admin production (if deployed)
   ],
   credentials: true
