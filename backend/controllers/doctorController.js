@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import admin from 'firebase-admin';
 import bcrypt from "bcrypt";
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
@@ -9,17 +9,56 @@ const loginDoctor = async (req, res) => {
     try {
 
         const { email, password } = req.body
-        const user = await doctorModel.findOne({ email })
+        const doctor = await doctorModel.findOne({ email })
 
-        if (!user) {
+        if (!doctor) {
             return res.json({ success: false, message: "Invalid credentials" })
         }
 
-        const isMatch = await bcrypt.compare(password, user.password)
+        const isMatch = await bcrypt.compare(password, doctor.password)
 
         if (isMatch) {
-            const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
-            res.json({ success: true, token })
+            try {
+                // Create or get Firebase user
+                let firebaseUser;
+                try {
+                    firebaseUser = await admin.auth().getUserByEmail(email);
+                } catch (error) {
+                    if (error.code === 'auth/user-not-found') {
+                        // Create user in Firebase Auth
+                        firebaseUser = await admin.auth().createUser({
+                            email: email,
+                            password: password,
+                            emailVerified: true,
+                            displayName: doctor.name
+                        });
+                        console.log(`✅ Created doctor user in Firebase Auth: ${firebaseUser.uid}`);
+                    } else {
+                        throw error;
+                    }
+                }
+
+                // Link Firebase UID to doctor account
+                if (!doctor.firebaseUid || doctor.firebaseUid !== firebaseUser.uid) {
+                    await doctorModel.findByIdAndUpdate(doctor._id, { firebaseUid: firebaseUser.uid });
+                }
+
+                // Set custom claims for doctor role
+                await admin.auth().setCustomUserClaims(firebaseUser.uid, { role: 'doctor' });
+                console.log(`✅ Doctor custom claims set for UID: ${firebaseUser.uid}`);
+
+                // Create custom token
+                const customToken = await admin.auth().createCustomToken(firebaseUser.uid, { role: 'doctor' });
+
+                res.json({ 
+                    success: true, 
+                    message: 'Login successful',
+                    customToken: customToken
+                });
+            } catch (firebaseError) {
+                console.error('❌ Firebase error:', firebaseError);
+                return res.json({ success: false, message: 'Failed to set doctor privileges' });
+            }
         } else {
             res.json({ success: false, message: "Invalid credentials" })
         }
@@ -34,9 +73,9 @@ const loginDoctor = async (req, res) => {
 // API for Google login/register for doctor
 const googleAuthDoctor = async (req, res) => {
     try {
-        const { email, name, googleId } = req.body;
+        const { email, firebaseUid } = req.body;
 
-        if (!email || !name) {
+        if (!email || !firebaseUid) {
             return res.json({ success: false, message: 'Missing Details' })
         }
 
@@ -47,14 +86,21 @@ const googleAuthDoctor = async (req, res) => {
             return res.json({ success: false, message: 'Doctor account not found. Please contact admin to create your account first.' })
         }
 
-        // Update password with Google ID if not already using Google auth
-        if (doctor.password && !doctor.password.includes('google_')) {
-            const hashedPassword = await bcrypt.hash('google_' + googleId + process.env.JWT_SECRET, 10)
-            await doctorModel.findByIdAndUpdate(doctor._id, { password: hashedPassword })
+        // Link Firebase UID to doctor account
+        if (!doctor.firebaseUid) {
+            await doctorModel.findByIdAndUpdate(doctor._id, { firebaseUid })
         }
 
-        const token = jwt.sign({ id: doctor._id }, process.env.JWT_SECRET)
-        res.json({ success: true, token })
+        // Set custom claims for doctor role
+        try {
+            await admin.auth().setCustomUserClaims(firebaseUid, { role: 'doctor' });
+            console.log(`✅ Doctor custom claims set for UID: ${firebaseUid} (Google Auth)`);
+        } catch (claimError) {
+            console.error('❌ Error setting custom claims:', claimError);
+            return res.json({ success: false, message: 'Failed to set doctor privileges' });
+        }
+        
+        res.json({ success: true, message: 'Google auth successful' })
 
     } catch (error) {
         console.log(error)

@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import admin from 'firebase-admin';
 import appointmentModel from "../models/appointmentModel.js";
 import doctorModel from "../models/doctorModel.js";
 import bcrypt from "bcrypt";
@@ -6,15 +6,47 @@ import validator from "validator";
 import { v2 as cloudinary } from "cloudinary";
 import userModel from "../models/userModel.js";
 
-// API for admin login
+// API for admin login - Verify credentials and set custom claims
 const loginAdmin = async (req, res) => {
     try {
-
         const { email, password } = req.body
 
         if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-            const token = jwt.sign(email + password, process.env.JWT_SECRET)
-            res.json({ success: true, token })
+            try {
+                // Create or get Firebase user
+                let firebaseUser;
+                try {
+                    firebaseUser = await admin.auth().getUserByEmail(email);
+                } catch (error) {
+                    if (error.code === 'auth/user-not-found') {
+                        // Create user in Firebase Auth
+                        firebaseUser = await admin.auth().createUser({
+                            email: email,
+                            password: password,
+                            emailVerified: true
+                        });
+                        console.log(`✅ Created admin user in Firebase Auth: ${firebaseUser.uid}`);
+                    } else {
+                        throw error;
+                    }
+                }
+
+                // Set custom claims for admin role
+                await admin.auth().setCustomUserClaims(firebaseUser.uid, { role: 'admin' });
+                console.log(`✅ Admin custom claims set for UID: ${firebaseUser.uid}`);
+
+                // Create custom token
+                const customToken = await admin.auth().createCustomToken(firebaseUser.uid, { role: 'admin' });
+
+                res.json({ 
+                    success: true, 
+                    message: 'Admin verified successfully',
+                    customToken: customToken
+                });
+            } catch (firebaseError) {
+                console.error('❌ Firebase error:', firebaseError);
+                return res.json({ success: false, message: 'Failed to set admin privileges' });
+            }
         } else {
             res.json({ success: false, message: "Invalid credentials" })
         }
@@ -138,16 +170,13 @@ const addDoctor = async (req, res) => {
 // API to get all doctors list for admin panel
 const allDoctors = async (req, res) => {
     try {
-
         const doctors = await doctorModel.find({}).select('-password')
         
         // Normalize speciality data to ensure it's always an array
         const normalizedDoctors = doctors.map(doctor => {
-            // Firestore returns plain objects, no need for .toObject()
             const docObj = { ...doctor }
             let speciality = docObj.speciality
             
-            // If speciality is a string, try to parse it as JSON
             if (typeof speciality === 'string') {
                 try {
                     const parsed = JSON.parse(speciality)
@@ -157,11 +186,9 @@ const allDoctors = async (req, res) => {
                         docObj.speciality = [speciality]
                     }
                 } catch {
-                    // Not JSON, wrap as single item array
                     docObj.speciality = [speciality]
                 }
             } else if (!Array.isArray(speciality)) {
-                // Fallback to empty array if neither string nor array
                 docObj.speciality = []
             }
             

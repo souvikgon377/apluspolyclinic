@@ -27,35 +27,40 @@ const App = () => {
   const location = useLocation()
 
   useEffect(() => {
-    // Only redirect from root path
-    if (location.pathname === '/') {
-      if (aToken && dToken) {
-        // If both tokens exist, default to admin dashboard
-        navigate('/admin-dashboard')
-      } else if (dToken) {
-        navigate('/doctor-dashboard')
-      } else if (aToken) {
-        navigate('/admin-dashboard')
-      }
-    } else {
-      // Protect routes - redirect if no appropriate token
-      const isAdminRoute = location.pathname.startsWith('/admin') || 
-                           location.pathname.startsWith('/all-appointments') ||
-                           location.pathname.startsWith('/add-doctor') ||
-                           location.pathname.startsWith('/doctor-list') ||
-                           location.pathname.startsWith('/prescriptions') ||
-                           location.pathname.startsWith('/gallery') ||
-                           location.pathname.startsWith('/patients')
-      
-      const isDoctorRoute = location.pathname.startsWith('/doctor')
-      
-      if (isAdminRoute && !aToken) {
-        navigate('/')
-      } else if (isDoctorRoute && !dToken) {
-        navigate('/')
-      }
+    // Only handle initial redirect from root
+    if (location.pathname === '/' && !aToken && !dToken) {
+      // No tokens, stay on login page
+      return
     }
-  }, [dToken, aToken, location.pathname, navigate])
+    
+    if (location.pathname === '/' && (aToken || dToken)) {
+      // Has token, redirect to appropriate dashboard
+      if (aToken) {
+        navigate('/admin-dashboard', { replace: true })
+      } else if (dToken) {
+        navigate('/doctor-dashboard', { replace: true })
+      }
+      return
+    }
+    
+    // Protect routes based on token type
+    const isAdminRoute = location.pathname.startsWith('/admin') || 
+                         location.pathname.startsWith('/all-appointments') ||
+                         location.pathname.startsWith('/add-doctor') ||
+                         location.pathname.startsWith('/doctor-list') ||
+                         location.pathname.startsWith('/prescriptions') ||
+                         location.pathname.startsWith('/gallery') ||
+                         location.pathname.startsWith('/patients')
+    
+    const isDoctorRoute = location.pathname.startsWith('/doctor')
+    
+    // Only redirect if completely unauthorized
+    if (isAdminRoute && !aToken && !dToken) {
+      navigate('/', { replace: true })
+    } else if (isDoctorRoute && !dToken && !aToken) {
+      navigate('/', { replace: true })
+    }
+  }, [aToken, dToken, location.pathname, navigate])
 
   return dToken || aToken ? (
     <div className='bg-[#F8F9FD] overflow-x-hidden min-h-screen max-w-full'>
@@ -65,6 +70,7 @@ const App = () => {
         <Sidebar />
         <div className='flex-1 overflow-x-hidden min-w-0'>
           <Routes>
+            <Route path='/' element={aToken ? <Dashboard /> : <DoctorDashboard />} />
             <Route path='/admin-dashboard' element={<Dashboard />} />
             <Route path='/all-appointments' element={<AllAppointments />} />
             <Route path='/add-doctor' element={<AddDoctor />} />
@@ -83,7 +89,9 @@ const App = () => {
   ) : (
     <>
       <ToastContainer />
-      <Login />
+      <Routes>
+        <Route path='/' element={<Login />} />
+      </Routes>
     </>
   )
 }

@@ -18,6 +18,7 @@ const AddDoctor = () => {
     const [degree, setDegree] = useState('')
     const [selectedDays, setSelectedDays] = useState([])
     const [dayTimeSlots, setDayTimeSlots] = useState({})
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     const { backendUrl } = useContext(AppContext)
     const { aToken, getAllDoctors, getDashData } = useContext(AdminContext)
@@ -83,6 +84,7 @@ const AddDoctor = () => {
         event.preventDefault()
 
         try {
+            setIsSubmitting(true)
 
             if (!docImg) {
                 return toast.error('Image Not Selected')
@@ -118,7 +120,7 @@ const AddDoctor = () => {
             formData.append('degree', degree)
             formData.append('availability', JSON.stringify(availability))
 
-            const { data } = await axios.post(backendUrl + '/api/admin/add-doctor', formData, { headers: { aToken } })
+            const { data } = await axios.post(backendUrl + '/api/admin/add-doctor', formData, { headers: { authorization: 'Bearer ' + aToken } })
             if (data.success) {
                 toast.success(data.message)
                 setDocImg(false)
@@ -141,6 +143,8 @@ const AddDoctor = () => {
         } catch (error) {
             toast.error(error.message)
             console.log(error)
+        } finally {
+            setIsSubmitting(false)
         }
 
     }
@@ -375,7 +379,16 @@ const AddDoctor = () => {
                     )}
                 </div>
 
-                <button type='submit' className='bg-gradient-to-r from-emerald-500 to-cyan-500 px-10 py-3 mt-6 text-white rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all'>Add Doctor</button>
+                <button 
+                    type='submit' 
+                    disabled={isSubmitting}
+                    className='bg-gradient-to-r from-emerald-500 to-cyan-500 px-10 py-3 mt-6 text-white rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2'
+                >
+                    {isSubmitting && (
+                        <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                    )}
+                    {isSubmitting ? 'Adding Doctor...' : 'Add Doctor'}
+                </button>
 
             </div>
 

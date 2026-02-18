@@ -27,7 +27,7 @@ const MyProfile = () => {
 
             image && formData.append('image', image)
 
-            const { data } = await axios.post(backendUrl + '/api/user/update-profile', formData, { headers: { token } })
+            const { data } = await axios.post(backendUrl + '/api/user/update-profile', formData, { headers: { authorization: 'Bearer ' + token } })
 
             if (data.success) {
                 toast.success(data.message)
@@ -46,7 +46,7 @@ const MyProfile = () => {
     }
 
     return userData ? (
-        <div className='max-w-4xl mx-auto px-4 py-8'>
+        <div className='max-w-4xl mx-auto px-4 py-8 overflow-x-hidden'>
             
             {/* Page Heading */}
             <div className='mb-8'>
@@ -55,10 +55,10 @@ const MyProfile = () => {
             </div>
 
             {/* Profile Card */}
-            <div className='bg-white rounded-xl shadow-md border border-gray-100 p-8'>
+            <div className='bg-white rounded-xl shadow-md border border-gray-100 p-4 sm:p-8 overflow-x-hidden'>
                 
                 {/* Profile Image and Name Section */}
-                <div className='flex items-start gap-6 mb-8'>
+                <div className='flex flex-col sm:flex-row items-start gap-6 mb-8'>
                     {isEdit
                         ? <label htmlFor='image' >
                             <div className='inline-block relative cursor-pointer group'>
@@ -76,12 +76,12 @@ const MyProfile = () => {
                         </div>
                     }
 
-                    <div className='flex-1'>
+                    <div className='flex-1 min-w-0'>
                         {isEdit
-                            ? <input className='bg-gray-50 text-2xl font-semibold w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-primary focus:outline-none transition-all' type="text" onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))} value={userData.name} />
-                            : <h2 className='text-2xl font-semibold text-gray-800'>{userData.name}</h2>
+                            ? <input className='bg-gray-50 text-xl sm:text-2xl font-semibold w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-primary focus:outline-none transition-all' type="text" onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))} value={userData.name} />
+                            : <h2 className='text-xl sm:text-2xl font-semibold text-gray-800 break-words'>{userData.name}</h2>
                         }
-                        <p className='text-sm text-gray-500 mt-1'>Patient ID: {userData._id?.slice(-8).toUpperCase()}</p>
+                        <p className='text-sm text-gray-500 mt-1 break-all'>Patient ID: {userData._id?.slice(-8).toUpperCase()}</p>
                     </div>
                 </div>
 
@@ -96,7 +96,7 @@ const MyProfile = () => {
                     <div className='grid md:grid-cols-2 gap-5 bg-gray-50 p-6 rounded-lg'>
                         <div>
                             <label className='text-xs font-medium text-gray-500 uppercase tracking-wide'>Email Address</label>
-                            <p className='text-primary font-medium mt-1'>{userData.email}</p>
+                            <p className='text-primary font-medium mt-1 break-all'>{userData.email}</p>
                         </div>
                         
                         <div>

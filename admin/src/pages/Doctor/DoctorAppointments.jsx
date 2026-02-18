@@ -8,6 +8,8 @@ const DoctorAppointments = () => {
   const { dToken, appointments, getAppointments, cancelAppointment, completeAppointment } = useContext(DoctorContext)
   const { slotDateFormat, calculateAge, currency } = useContext(AppContext)
   const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState({})
 
   const handleRefresh = async () => {
     setLoading(true)
@@ -15,11 +17,33 @@ const DoctorAppointments = () => {
     setTimeout(() => setLoading(false), 2000)
   }
 
+  const handleCancel = async (id) => {
+    setActionLoading(prev => ({ ...prev, [id]: 'cancel' }))
+    await cancelAppointment(id)
+    setActionLoading(prev => ({ ...prev, [id]: null }))
+  }
+
+  const handleComplete = async (id) => {
+    setActionLoading(prev => ({ ...prev, [id]: 'complete' }))
+    await completeAppointment(id)
+    setActionLoading(prev => ({ ...prev, [id]: null }))
+  }
+
   useEffect(() => {
     if (dToken) {
-      getAppointments()
+      setInitialLoading(true)
+      getAppointments().finally(() => setInitialLoading(false))
     }
   }, [dToken])
+
+  if (initialLoading) {
+    return (
+      <div className='w-full max-w-6xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[400px]'>
+        <div className='w-20 h-20 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4'></div>
+        <p className='text-gray-600 text-lg'>Loading appointments...</p>
+      </div>
+    )
+  }
 
   return (
     <div className='w-full max-w-6xl mx-auto px-4 py-8 overflow-x-hidden'>
@@ -89,18 +113,28 @@ const DoctorAppointments = () => {
                       ? <span className='px-3 py-1 bg-green-100 text-green-600 text-xs font-semibold rounded-full whitespace-nowrap'>Completed</span>
                       : <div className='flex gap-2'>
                           <button 
-                            onClick={() => cancelAppointment(item._id)} 
-                            className='w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-red-100 hover:bg-red-200 border-2 border-red-300 rounded-lg transition-all hover:shadow-lg'
+                            onClick={() => handleCancel(item._id)} 
+                            disabled={actionLoading[item._id]}
+                            className='w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-red-100 hover:bg-red-200 border-2 border-red-300 rounded-lg transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed'
                             title='Cancel Appointment'
                           >
-                            <img className='w-6 h-6 sm:w-7 sm:h-7' src={assets.cancel_icon} alt="" />
+                            {actionLoading[item._id] === 'cancel' ? (
+                              <div className='w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin'></div>
+                            ) : (
+                              <img className='w-6 h-6 sm:w-7 sm:h-7' src={assets.cancel_icon} alt="" />
+                            )}
                           </button>
                           <button 
-                            onClick={() => completeAppointment(item._id)} 
-                            className='w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-green-100 hover:bg-green-200 border-2 border-green-300 rounded-lg transition-all hover:shadow-lg'
+                            onClick={() => handleComplete(item._id)} 
+                            disabled={actionLoading[item._id]}
+                            className='w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-green-100 hover:bg-green-200 border-2 border-green-300 rounded-lg transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed'
                             title='Complete Appointment'
                           >
-                            <img className='w-6 h-6 sm:w-7 sm:h-7' src={assets.tick_icon} alt="" />
+                            {actionLoading[item._id] === 'complete' ? (
+                              <div className='w-5 h-5 border-2 border-green-600 border-t-transparent rounded-full animate-spin'></div>
+                            ) : (
+                              <img className='w-6 h-6 sm:w-7 sm:h-7' src={assets.tick_icon} alt="" />
+                            )}
                           </button>
                         </div>
                   }

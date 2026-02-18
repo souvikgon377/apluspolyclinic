@@ -24,7 +24,7 @@ const Navbar = () => {
     
     if (isAdminRoute && aToken) {
       setAToken('')
-      localStorage.removeItem('aToken')
+      sessionStorage.removeItem('aToken')
       // If doctor is also logged in, go to doctor dashboard, else login
       if (dToken) {
         navigate('/doctor-dashboard')
@@ -33,7 +33,7 @@ const Navbar = () => {
       }
     } else if (dToken) {
       setDToken('')
-      localStorage.removeItem('dToken')
+      sessionStorage.removeItem('dToken')
       // If admin is also logged in, go to admin dashboard, else login
       if (aToken) {
         navigate('/admin-dashboard')

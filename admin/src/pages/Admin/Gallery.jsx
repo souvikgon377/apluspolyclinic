@@ -65,7 +65,7 @@ const Gallery = () => {
             formData.append('title', title)
             formData.append('description', description)
 
-            const { data } = await axios.post(backendUrl + '/api/admin/upload-gallery', formData, { headers: { aToken } })
+            const { data } = await axios.post(backendUrl + '/api/admin/upload-gallery', formData, { headers: { authorization: 'Bearer ' + aToken } })
 
             if (data.success) {
                 toast.success(data.message)
@@ -94,7 +94,8 @@ const Gallery = () => {
                 return
             }
 
-            const { data } = await axios.post(backendUrl + '/api/admin/delete-gallery', { imageId }, { headers: { aToken } })
+            setDeletingId(imageId)
+            const { data } = await axios.post(backendUrl + '/api/admin/delete-gallery', { imageId }, { headers: { authorization: 'Bearer ' + aToken } })
 
             if (data.success) {
                 toast.success(data.message)
@@ -106,6 +107,8 @@ const Gallery = () => {
         } catch (error) {
             toast.error(error.message)
             console.log(error)
+        } finally {
+            setDeletingId(null)
         }
     }
 
@@ -234,9 +237,17 @@ const Gallery = () => {
                                 <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all flex items-center justify-center'>
                                     <button 
                                         onClick={() => deleteImage(item._id)}
-                                        className='opacity-0 group-hover:opacity-100 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all transform scale-90 group-hover:scale-100'
+                                        disabled={deletingId === item._id}
+                                        className='opacity-0 group-hover:opacity-100 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all transform scale-90 group-hover:scale-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
                                     >
-                                        Delete
+                                        {deletingId === item._id ? (
+                                            <>
+                                                <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                                                Deleting...
+                                            </>
+                                        ) : (
+                                            'Delete'
+                                        )}
                                     </button>
                                 </div>
                                 {(item.title || item.description) && (

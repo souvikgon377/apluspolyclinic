@@ -11,6 +11,7 @@ const DoctorProfile = () => {
     const [isEdit, setIsEdit] = useState(false)
     const [selectedDays, setSelectedDays] = useState([])
     const [dayTimeSlots, setDayTimeSlots] = useState({})
+    const [isSaving, setIsSaving] = useState(false)
 
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -103,6 +104,7 @@ const DoctorProfile = () => {
     const updateProfile = async () => {
 
         try {
+            setIsSaving(true)
 
             // Build availability array from selectedDays and dayTimeSlots
             const availability = []
@@ -125,7 +127,7 @@ const DoctorProfile = () => {
                 availability: availability
             }
 
-            const { data } = await axios.post(backendUrl + '/api/doctor/update-profile', updateData, { headers: { dToken } })
+            const { data } = await axios.post(backendUrl + '/api/doctor/update-profile', updateData, { headers: { authorization: 'Bearer ' + dToken } })
 
             if (data.success) {
                 toast.success(data.message)
@@ -140,6 +142,8 @@ const DoctorProfile = () => {
         } catch (error) {
             toast.error(error.message)
             console.log(error)
+        } finally {
+            setIsSaving(false)
         }
 
     }
@@ -425,9 +429,13 @@ const DoctorProfile = () => {
                             </button>
                             <button 
                                 onClick={updateProfile} 
-                                className='w-full sm:w-auto px-4 sm:px-6 py-2.5 rounded-lg bg-primary text-white hover:bg-primary/90 transition-all font-medium shadow-md hover:shadow-lg text-sm sm:text-base'
+                                disabled={isSaving}
+                                className='w-full sm:w-auto px-4 sm:px-6 py-2.5 rounded-lg bg-primary text-white hover:bg-primary/90 transition-all font-medium shadow-md hover:shadow-lg text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
                             >
-                                Save Changes
+                                {isSaving && (
+                                    <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                                )}
+                                {isSaving ? 'Saving...' : 'Save Changes'}
                             </button>
                         </>
                         : <button 

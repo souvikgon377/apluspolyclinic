@@ -20,7 +20,7 @@ const Verify = () => {
 
         try {
 
-            const { data } = await axios.post(backendUrl + "/api/user/verifyRazorpay", { success, appointmentId }, { headers: { token } })
+            const { data } = await axios.post(backendUrl + "/api/user/verifyRazorpay", { success, appointmentId }, { headers: { authorization: 'Bearer ' + token } })
 
             if (data.success) {
                 toast.success(data.message)
@@ -44,7 +44,7 @@ const Verify = () => {
     }, [token])
 
     return (
-        <div className='min-h-[60vh] flex items-center justify-center'>
+        <div className='min-h-[60vh] flex items-center justify-center overflow-x-hidden'>
             <div className="w-20 h-20 border-4 border-gray-300 border-t-4 border-t-primary rounded-full animate-spin"></div>
         </div>
     )

@@ -21,7 +21,7 @@ import WhatsAppChat from './components/WhatsAppChat'
 
 const App = () => {
   return (
-    <div className='mx-4 sm:mx-[10%]'>
+    <div className='mx-4 sm:mx-[10%] overflow-x-hidden max-w-full'>
       <ToastContainer />
       <Navbar />
       <Routes>

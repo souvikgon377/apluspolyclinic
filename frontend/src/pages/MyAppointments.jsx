@@ -25,7 +25,7 @@ const MyAppointments = () => {
     const getUserAppointments = async () => {
         try {
 
-            const { data } = await axios.get(backendUrl + '/api/user/appointments', { headers: { token } })
+            const { data } = await axios.get(backendUrl + '/api/user/appointments', { headers: { authorization: 'Bearer ' + token } })
             setAppointments(data.appointments.reverse())
 
         } catch (error) {
@@ -39,7 +39,7 @@ const MyAppointments = () => {
 
         try {
 
-            const { data } = await axios.post(backendUrl + '/api/user/cancel-appointment', { appointmentId }, { headers: { token } })
+            const { data } = await axios.post(backendUrl + '/api/user/cancel-appointment', { appointmentId }, { headers: { authorization: 'Bearer ' + token } })
 
             if (data.success) {
                 toast.success(data.message)
@@ -69,7 +69,7 @@ const MyAppointments = () => {
                 console.log(response)
 
                 try {
-                    const { data } = await axios.post(backendUrl + "/api/user/verifyRazorpay", response, { headers: { token } });
+                    const { data } = await axios.post(backendUrl + "/api/user/verifyRazorpay", response, { headers: { authorization: 'Bearer ' + token } });
                     if (data.success) {
                         navigate('/my-appointments')
                         getUserAppointments()
@@ -87,7 +87,7 @@ const MyAppointments = () => {
     // Function to make payment using razorpay
     const appointmentRazorpay = async (appointmentId) => {
         try {
-            const { data } = await axios.post(backendUrl + '/api/user/payment-razorpay', { appointmentId }, { headers: { token } })
+            const { data } = await axios.post(backendUrl + '/api/user/payment-razorpay', { appointmentId }, { headers: { authorization: 'Bearer ' + token } })
             if (data.success) {
                 initPay(data.order)
             }else{
@@ -108,26 +108,25 @@ const MyAppointments = () => {
     }, [token])
 
     return (
-        <div>
+        <div className='overflow-x-hidden max-w-full'>
             <p className='pb-3 mt-12 text-lg font-medium text-gray-600 border-b'>My appointments</p>
-            <div className=''>
+            <div className='overflow-x-hidden'>
                 {appointments.map((item, index) => (
-                    <div key={index} className='grid grid-cols-[1fr_2fr] gap-4 sm:flex sm:gap-6 py-4 border-b'>
-                        <div className='w-36'>
+                    <div key={index} className='flex flex-col sm:flex-row sm:gap-6 py-4 border-b gap-4'>
+                        <div className='w-32 sm:w-36 flex-shrink-0'>
                             <div className='aspect-square w-full overflow-hidden bg-emerald-50 rounded-lg'>
                                 <img className='w-full h-full object-cover' src={item.docData.image} alt="" />
                             </div>
                         </div>
-                        <div className='flex-1 text-sm text-[#5E5E5E]'>
-                            <p className='text-[#262626] text-base font-semibold'>{item.docData.name}</p>
-                            <p>{item.docData.speciality}</p>
+                        <div className='flex-1 text-sm text-[#5E5E5E] min-w-0'>
+                            <p className='text-[#262626] text-base font-semibold break-words'>{item.docData.name}</p>
+                            <p className='break-words'>{item.docData.speciality}</p>
                             <p className='text-[#464646] font-medium mt-1'>Address:</p>
-                            <p className=''>{item.docData.address.line1}</p>
-                            <p className=''>{item.docData.address.line2}</p>
-                            <p className=' mt-1'><span className='text-sm text-[#3C3C3C] font-medium'>Date & Time:</span> {slotDateFormat(item.slotDate)} |  {item.slotTime}</p>
+                            <p className='break-words'>{item.docData.address.line1}</p>
+                            <p className='break-words'>{item.docData.address.line2}</p>
+                            <p className='mt-1 break-words'><span className='text-sm text-[#3C3C3C] font-medium'>Date & Time:</span> {slotDateFormat(item.slotDate)} | {item.slotTime}</p>
                         </div>
-                        <div></div>
-                        <div className='flex flex-col gap-2 justify-end text-sm text-center'>
+                        <div className='flex flex-col gap-2 justify-end text-sm text-center w-full sm:w-auto sm:min-w-[192px] flex-shrink-0'>
                             {!item.cancelled && !item.payment && !item.isCompleted && payment !== item._id && <button onClick={() => setPayment(item._id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-300'>Pay Online</button>}
                             {!item.cancelled && !item.payment && !item.isCompleted && payment === item._id && <button onClick={() => appointmentRazorpay(item._id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-gray-100 hover:text-white transition-all duration-300 flex items-center justify-center'><img className='max-w-20 max-h-5' src={assets.razorpay_logo} alt="" /></button>}
                             {!item.cancelled && item.payment && !item.isCompleted && <button className='sm:min-w-48 py-2 border rounded text-emerald-700 bg-emerald-50'>Paid</button>}

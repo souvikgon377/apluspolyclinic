@@ -1,6 +1,6 @@
 import validator from "validator";
+import admin from 'firebase-admin';
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import userModel from "../models/userModel.js";
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
@@ -18,10 +18,10 @@ const razorpayInstance = new razorpay({
 const registerUser = async (req, res) => {
 
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, firebaseUid } = req.body;
 
         // checking for all data to register user
-        if (!name || !email || !password) {
+        if (!name || !email || !firebaseUid) {
             return res.json({ success: false, message: 'Missing Details' })
         }
 
@@ -30,25 +30,22 @@ const registerUser = async (req, res) => {
             return res.json({ success: false, message: "Please enter a valid email" })
         }
 
-        // validating strong password
-        if (password.length < 8) {
-            return res.json({ success: false, message: "Please enter a strong password" })
+        // Check if user already exists
+        const existingUser = await userModel.findOne({ email })
+        if (existingUser) {
+            return res.json({ success: false, message: "User already exists" })
         }
-
-        // hashing user password
-        const salt = await bcrypt.genSalt(10); // the more no. round the more time it will take
-        const hashedPassword = await bcrypt.hash(password, salt)
 
         const userData = {
             name,
             email,
-            password: hashedPassword,
+            password: password || '',
+            firebaseUid,
         }
 
-        const user = await userModel.create(userData)
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
+        await userModel.create(userData)
 
-        res.json({ success: true, token })
+        res.json({ success: true, message: 'Registration successful' })
 
     } catch (error) {
         console.log(error)
@@ -60,22 +57,20 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
 
     try {
-        const { email, password } = req.body;
-        const user = await userModel.findOne({ email })
+        const { email, firebaseUid } = req.body;
+        let user = await userModel.findOne({ email })
 
         if (!user) {
             return res.json({ success: false, message: "User does not exist" })
         }
 
-        const isMatch = await bcrypt.compare(password, user.password)
+        // Link Firebase UID if not already linked
+        if (firebaseUid && !user.firebaseUid) {
+            await userModel.findByIdAndUpdate(user._id, { firebaseUid })
+        }
 
-        if (isMatch) {
-            const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
-            res.json({ success: true, token })
-        }
-        else {
-            res.json({ success: false, message: "Invalid credentials" })
-        }
+        res.json({ success: true, message: 'Login successful' })
+        
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message })
@@ -85,9 +80,9 @@ const loginUser = async (req, res) => {
 // API for Google login/register
 const googleAuth = async (req, res) => {
     try {
-        const { email, name, googleId } = req.body;
+        const { email, name, firebaseUid } = req.body;
 
-        if (!email || !name) {
+        if (!email || !name || !firebaseUid) {
             return res.json({ success: false, message: 'Missing Details' })
         }
 
@@ -95,18 +90,20 @@ const googleAuth = async (req, res) => {
         let user = await userModel.findOne({ email })
 
         if (!user) {
-            // Create new user with Google auth
+            // Create new user
             const userData = {
                 name,
                 email,
-                password: await bcrypt.hash(googleId + process.env.JWT_SECRET, 10), // Hash the googleId as password
+                firebaseUid,
             }
 
             user = await userModel.create(userData)
+        } else if (!user.firebaseUid) {
+            // Link Firebase UID to existing user
+            await userModel.findByIdAndUpdate(user._id, { firebaseUid })
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
-        res.json({ success: true, token })
+        res.json({ success: true, message: 'Google auth successful' })
 
     } catch (error) {
         console.log(error)

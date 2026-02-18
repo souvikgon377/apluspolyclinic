@@ -8,7 +8,8 @@ import DoctorContextProvider from './context/DoctorContext.jsx'
 import AppContextProvider from './context/AppContext.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <BrowserRouter>
+  // Removed React.StrictMode to prevent double renders and state issues
+  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
     <AdminContextProvider>
       <DoctorContextProvider>
         <AppContextProvider>

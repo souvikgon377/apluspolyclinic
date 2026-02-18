@@ -18,6 +18,7 @@ const userModel = {
       dob: userData.dob || 'Not Selected',
       password: userData.password || '',
       createdAt: Date.now(),
+      firebaseUid: userData.firebaseUid || '',
     };
     
     await docRef.set(userWithDefaults);

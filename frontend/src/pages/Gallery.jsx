@@ -29,13 +29,13 @@ const Gallery = () => {
   }, [])
 
   return (
-    <div>
+    <div className='overflow-x-hidden max-w-full'>
       {/* Header */}
       <div className='text-center text-2xl pt-10 text-gray-500'>
         <p>OUR <span className='text-gray-700 font-medium'>GALLERY</span></p>
       </div>
 
-      <div className='my-10 text-center text-sm text-gray-600 max-w-2xl mx-auto px-4'>
+      <div className='my-10 text-center text-sm text-gray-600 max-w-2xl mx-auto px-4 break-words'>
         <p>Explore our clinic's journey through images. From our state-of-the-art facilities to memorable moments with our patients and staff, these photos showcase our commitment to quality healthcare and community service.</p>
       </div>
 

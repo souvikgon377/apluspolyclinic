@@ -6,7 +6,7 @@ import Banner from '../components/Banner'
 
 const Home = () => {
   return (
-    <div>
+    <div className='overflow-x-hidden max-w-full'>
       <Header />
       <SpecialityMenu />
       <TopDoctors />

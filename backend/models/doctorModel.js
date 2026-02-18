@@ -23,6 +23,7 @@ const doctorModel = {
       slots_booked: doctorData.slots_booked || {},
       address: doctorData.address || { line1: '', line2: '' },
       date: doctorData.date || Date.now(),
+      firebaseUid: doctorData.firebaseUid || '',
     };
     
     await docRef.set(doctorWithDefaults);
